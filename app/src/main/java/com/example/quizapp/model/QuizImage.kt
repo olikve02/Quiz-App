@@ -1,6 +1,9 @@
 package com.example.quizapp.model
 
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
+
 data class QuizImage(
-    val imgageRes: Int,
-    val name: String
+    @DrawableRes val imageRes: Int,
+    @StringRes val name: Int
 )
