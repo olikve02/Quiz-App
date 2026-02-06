@@ -1,6 +1,8 @@
 package com.example.quizapp
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Button
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -15,6 +17,13 @@ class Menu : AppCompatActivity() {
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
+        }
+        val goToGalleryBtn = findViewById<Button>(R.id.goToGalleryBtn)
+        val goToQuizBtn = findViewById<Button>(R.id.goToQuizBtn)
+
+        goToGalleryBtn.setOnClickListener {
+            val intent = Intent(this, Gallery::class.java)
+            startActivity(intent)
         }
     }
 }
