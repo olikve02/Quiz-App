@@ -127,16 +127,22 @@ fun GalleryLayout(modifier : Modifier = Modifier) {
         )
     }
 
+    val context = LocalContext.current
+
     val picker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
-    ){ uri: Uri? ->
-        if (uri != null){
+    ) { uri: Uri? ->
+        if (uri != null) {
+
+            context.contentResolver.takePersistableUriPermission(
+                uri,
+                android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+
             newImageUri = uri
-            android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+            showAddImageDialog = true
         }
-
     }
-
 
     Column(
         modifier = Modifier
@@ -158,7 +164,6 @@ fun GalleryLayout(modifier : Modifier = Modifier) {
             modifier,
             {
                 picker.launch(arrayOf("image/*"))
-                showAddImageDialog = true
         })
     }
 }
