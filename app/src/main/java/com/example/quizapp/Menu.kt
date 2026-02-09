@@ -25,5 +25,11 @@ class Menu : AppCompatActivity() {
             val intent = Intent(this, Gallery::class.java)
             startActivity(intent)
         }
+
+        goToQuizBtn.setOnClickListener {
+            val intent = Intent(this, Quiz::class.java)
+            startActivity(intent)
+        }
+
     }
 }
