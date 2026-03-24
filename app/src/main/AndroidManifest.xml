@@ -12,17 +12,17 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.QuizApp">
         <activity
-            android:name=".Quiz"
+            android:name=".activites.Quiz"
             android:exported="false"
             android:label="@string/title_activity_quiz"
             android:theme="@style/Theme.QuizApp" />
         <activity
-            android:name=".Gallery"
+            android:name=".activites.Gallery"
             android:exported="false"
             android:label="@string/title_activity_gallery"
             android:theme="@style/Theme.QuizApp" />
         <activity
-            android:name=".Menu"
+            android:name=".activites.Menu"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -30,9 +30,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".MainActivity"
-            android:exported="false" />
+        <provider
+            android:name=".data.QuizContentProvider"
+            android:authorities="com.example.quizapp.provider"
+            android:exported="true" />
     </application>
 
 </manifest>

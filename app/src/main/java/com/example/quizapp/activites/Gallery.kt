@@ -1,15 +1,13 @@
-package com.example.quizapp
+package com.example.quizapp.activites
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,12 +24,10 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -41,49 +37,58 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.quizapp.data.DataSource
 import com.example.quizapp.model.QuizImage
 import com.example.quizapp.ui.theme.QuizAppTheme
-import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
-import androidx.compose.ui.draw.paint
-import com.example.quizapp.model.QuizImageStore
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.testTag
+import com.example.quizapp.R
+import com.example.quizapp.data.AppDatabase
+import com.example.quizapp.data.QuizImageDao
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+
 
 class Gallery : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val db = AppDatabase.getDatabase(applicationContext)
+        val dao = db.quizImageDao()
         setContent {
             QuizAppTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    GalleryLayout(modifier =Modifier.padding(innerPadding))
+                    GalleryLayout(modifier =Modifier.padding(innerPadding), dao)
                 }
             }
         }
     }
 }
 @Composable
-fun GalleryLayout(modifier : Modifier = Modifier) {
+fun GalleryLayout(modifier : Modifier = Modifier, dao: QuizImageDao) {
 
-
-    //Load initial images
-    if(QuizImageStore.items.isEmpty()){
-        QuizImageStore.add(QuizImage(R.drawable.gigachad,"Giga Chad"))
-        QuizImageStore.add(QuizImage(R.drawable.slay,"Slay"))
-        QuizImageStore.add(QuizImage(R.drawable.gutta, "Vibes"))
-    }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     var imageToRemove by remember { mutableStateOf<QuizImage?>(null) }
     var showRemoveImageDialog by remember { mutableStateOf(false) }
     var showAddImageDialog by remember {mutableStateOf(false ) }
     var newImageName by remember { mutableStateOf("") }
     var newImageUri by remember { mutableStateOf<Uri?>(null) }
+    var images by remember { mutableStateOf<List<QuizImage>>(emptyList<QuizImage>()) }
+
+
+    //Load initial images and convert drawable to uri
+    LaunchedEffect(Unit){
+
+        images = dao.getAll()
+    }
+
 
 
     //Dialogs
@@ -92,10 +97,16 @@ fun GalleryLayout(modifier : Modifier = Modifier) {
             title = { Text(text = "Remove Image") },
             onDismissRequest = {},
             confirmButton = {
-               Button(onClick = {
-                   QuizImageStore.remove(imageToRemove!!)
-                   showRemoveImageDialog = false
-               }) {
+               Button(
+                   onClick = {
+                   scope.launch {
+                       dao.delete(imageToRemove!!)
+                       showRemoveImageDialog = false
+                       images = dao.getAll()
+                   }
+               },
+                   modifier = Modifier.testTag("confirm_delete_button")
+                   ) {
                    Text("Yes")
                }
             },
@@ -112,50 +123,60 @@ fun GalleryLayout(modifier : Modifier = Modifier) {
             title = { TextField(
                 value = newImageName,
                 onValueChange = { newImageName = it },
-                label = { Text("New Image Name") }
+                label = { Text("New Image Name") },
+                modifier = Modifier.testTag("name_input")
             ) },
             onDismissRequest = {},
             confirmButton = {
                 Button(onClick = {
-                    showAddImageDialog = false
-                    QuizImageStore.add(QuizImage(name = newImageName, imageUri = newImageUri.toString()))
-
-                }){
+                    scope.launch {
+                        showAddImageDialog = false
+                        dao.insert(QuizImage(name = newImageName, imageUri = newImageUri.toString()))
+                        images = dao.getAll()
+                    }
+                }, modifier = Modifier.testTag("confirm_add_button")){
                     Text("Add")
                 }
             },
         )
     }
 
-    val context = LocalContext.current
+
 
     val picker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         if (uri != null) {
-
-            context.contentResolver.takePersistableUriPermission(
-                uri,
-                android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-            )
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (_: SecurityException) {
+            }
 
             newImageUri = uri
             showAddImageDialog = true
         }
     }
-
+    //Layout
     Column(
         modifier = Modifier
             .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Text(
+            text = "Count: ${images.size}",
+            modifier = Modifier.testTag("image_count")
+        )
         GalleryGrid(
             onAddImage = {},
             onRemoveImage = { clickedImage ->
                 showRemoveImageDialog = true
                 imageToRemove = clickedImage
             },
-            modifier = Modifier
+            modifier = Modifier,
+            images = images
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -168,7 +189,7 @@ fun GalleryLayout(modifier : Modifier = Modifier) {
     }
 }
 @Composable
-fun GalleryGrid(modifier: Modifier = Modifier, onAddImage: () -> Unit, onRemoveImage: (clickedImage: QuizImage) -> Unit) {
+fun GalleryGrid(modifier: Modifier = Modifier, onAddImage: () -> Unit, onRemoveImage: (clickedImage: QuizImage) -> Unit, images: List<QuizImage>) {
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
@@ -176,7 +197,7 @@ fun GalleryGrid(modifier: Modifier = Modifier, onAddImage: () -> Unit, onRemoveI
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        items (QuizImageStore.items) { image ->
+        items (images) { image ->
             QuizImageItem(image, onImageClick = { onRemoveImage(image) })
         }
     }
@@ -191,21 +212,13 @@ fun QuizImageItem(quizImage: QuizImage, modifier: Modifier = Modifier, onImageCl
                 .padding(8.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .background(Color.LightGray)
-                .clickable(onClick = onImageClick),
+                .clickable(onClick = onImageClick)
+                .testTag("image_item_${quizImage.name}"),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            when {
-                quizImage.imageRes != null -> {
-                    Image(
-                        painter = painterResource(quizImage.imageRes),
-                        contentDescription = null,
-                        modifier
-                            .size(100.dp)
-                            .padding(top = 12.dp)
-                    )
-                }
 
-                quizImage.imageUri != null -> {
+
+
                     AsyncImage(
                         model = quizImage.imageUri.let(Uri::parse),
                         contentDescription = null,
@@ -213,8 +226,8 @@ fun QuizImageItem(quizImage: QuizImage, modifier: Modifier = Modifier, onImageCl
                             .size(100.dp)
                             .padding(12.dp)
                     )
-                }
-            }
+
+
 
             Text(
                 text = quizImage.name,
@@ -231,6 +244,7 @@ fun ButtonRow(modifier: Modifier = Modifier, onAddImage: () -> Unit){
             onClick = onAddImage,
             modifier = Modifier
                 .width(150.dp)
+                .testTag("add_photo_button")
         ) {
             Text("Add Photo")
         }
@@ -245,7 +259,7 @@ fun ButtonRow(modifier: Modifier = Modifier, onAddImage: () -> Unit){
 @Composable
 fun GreetingPreview() {
     QuizAppTheme {
-        GalleryLayout()
+       // GalleryLayout()
 
     }
 }
