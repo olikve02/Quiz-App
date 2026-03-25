@@ -1,4 +1,4 @@
-## Testing the ContentProvider with adb
+# Testing the ContentProvider with adb
 
 The app publishes quiz entries through a ContentProvider.
 
