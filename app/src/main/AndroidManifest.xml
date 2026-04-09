@@ -17,12 +17,12 @@
             android:label="@string/title_activity_quiz"
             android:theme="@style/Theme.QuizApp" />
         <activity
-            android:name=".activites.Gallery"
+            android:name=".activity.Gallery"
             android:exported="false"
             android:label="@string/title_activity_gallery"
             android:theme="@style/Theme.QuizApp" />
         <activity
-            android:name=".activites.Menu"
+            android:name=".activity.Menu"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

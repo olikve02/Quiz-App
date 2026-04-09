@@ -7,7 +7,6 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
-import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
@@ -17,7 +16,7 @@ import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.example.quizapp.activites.Gallery
+import com.example.quizapp.activity.Gallery
 import com.example.quizapp.data.AppDatabase
 import com.example.quizapp.model.QuizImage
 import kotlinx.coroutines.runBlocking

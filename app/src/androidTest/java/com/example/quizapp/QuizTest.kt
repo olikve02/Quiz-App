@@ -1,7 +1,6 @@
 package com.example.quizapp
 
 import android.content.Context
-import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -9,7 +8,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.example.quizapp.activites.Quiz
+import com.example.quizapp.activity.Quiz
 import com.example.quizapp.data.AppDatabase
 import com.example.quizapp.model.QuizImage
 import kotlinx.coroutines.runBlocking
